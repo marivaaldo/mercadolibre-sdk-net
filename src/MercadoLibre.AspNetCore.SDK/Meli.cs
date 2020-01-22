@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MercadoLibre.AspNetCore.SDK.Exceptions;
+using MercadoLibre.AspNetCore.SDK.Models;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -17,6 +19,8 @@ namespace MercadoLibre.AspNetCore.SDK
 
         public static string ApiUrl { get; set; } = "https://api.mercadolibre.com";
 
+        public const string AccessTokenKeyName = "access_token";
+
         #endregion
 
         #region Private fields
@@ -29,19 +33,7 @@ namespace MercadoLibre.AspNetCore.SDK
 
         public long ClientId { get; private set; }
 
-        public string AccessToken { get; private set; }
-
-        public string RefreshToken { get; private set; }
-
-        /** News **/
-
-        public long ExperiIn { get; private set; }
-
-        public string Scope { get; private set; }
-
-        public string UserId { get; private set; }
-
-        public string TokenType { get; private set; }
+        public AuthorizeToken AuthorizeToken { get; set; } = new AuthorizeToken();
 
         #region Constructors
 
@@ -52,11 +44,11 @@ namespace MercadoLibre.AspNetCore.SDK
                 BaseAddress = new Uri(ApiUrl),
             };
 
-            _Client.DefaultRequestHeaders.UserAgent.Clear();
-            _Client.DefaultRequestHeaders.Add("User-Agent", SdkVersion);
+            _Client.DefaultRequestHeaders.Clear();
 
-            _Client.DefaultRequestHeaders.Accept.Clear();
+            _Client.DefaultRequestHeaders.Add("User-Agent", SdkVersion);
             _Client.DefaultRequestHeaders.Add("Accept", "application/json");
+            _Client.DefaultRequestHeaders.Add("Content-Type", "application/json");
         }
 
         public Meli(long clientId, string clientSecret)
@@ -71,7 +63,7 @@ namespace MercadoLibre.AspNetCore.SDK
         {
             this.ClientId = clientId;
             this.ClientSecret = clientSecret;
-            this.AccessToken = accessToken;
+            this.AuthorizeToken.AccessToken = accessToken;
         }
 
         public Meli(long clientId, string clientSecret, string accessToken, string refreshToken)
@@ -79,8 +71,8 @@ namespace MercadoLibre.AspNetCore.SDK
         {
             this.ClientId = clientId;
             this.ClientSecret = clientSecret;
-            this.AccessToken = accessToken;
-            this.RefreshToken = refreshToken;
+            this.AuthorizeToken.AccessToken = accessToken;
+            this.AuthorizeToken.RefreshToken = refreshToken;
         }
 
         #endregion
@@ -98,24 +90,9 @@ namespace MercadoLibre.AspNetCore.SDK
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var token = JsonConvert.DeserializeAnonymousType(response.Content, new
-                {
-                    refresh_token = "",
-                    access_token = "",
-                    expires_in = 0,
-                    user_id = "",
-                    scope = "",
-                    token_type = ""
-                });
+                var content = await response.Content.ReadAsStringAsync();
 
-                JsonSerializer.Deserialize()
-
-                this.AccessToken = token.access_token;
-                this.RefreshToken = token.refresh_token;
-                this.ExperiIn = Convert.ToInt64(token.expires_in);
-                this.Scope = token.scope;
-                this.UserId = token.user_id;
-                this.TokenType = token.token_type;
+                this.AuthorizeToken = JsonSerializer.Deserialize<AuthorizeToken>(content);
             }
             else
             {
@@ -123,39 +100,23 @@ namespace MercadoLibre.AspNetCore.SDK
             }
         }
 
-        public async Task<HttpResponseMessage> GetAsync(string resource)
+        public async Task RefreshTokenAsync()
         {
-            return Get(resource, new List<Parameter>());
+            await RefreshTokenAsync(AuthorizeToken.RefreshToken);
         }
 
-        public void refreshToken()
+
+        public async Task RefreshTokenAsync(string refreshToken)
         {
-            var request = new RestRequest("/oauth/token?grant_type=refresh_token&client_id={client_id}&client_secret={client_secret}&refresh_token={refresh_token}", Method.POST);
-            request.AddParameter("client_id", this.ClientId, ParameterType.UrlSegment);
-            request.AddParameter("client_secret", this.ClientSecret, ParameterType.UrlSegment);
-            request.AddParameter("refresh_token", this.RefreshToken, ParameterType.UrlSegment);
+            var url = $"/oauth/token?grant_type=refresh_token&client_id={ClientId}&client_secret={ClientSecret}&refresh_token={refreshToken}";
 
-            request.AddHeader("Accept", "application/json");
+            var response = await _Client.PostAsync(url, null);
 
-            var response = ExecuteRequest(request);
-
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
+            if (response.StatusCode == HttpStatusCode.OK)
             {
-                var token = JsonConvert.DeserializeAnonymousType(response.Content, new
-                {
-                    refresh_token = "",
-                    access_token = "",
-                    expires_in = 0,
-                    user_id = "",
-                    scope = "",
-                    token_type = ""
-                });
-                this.AccessToken = token.access_token;
-                this.RefreshToken = token.refresh_token;
-                this.ExperiIn = Convert.ToInt64(token.expires_in);
-                this.Scope = token.scope;
-                this.UserId = token.user_id;
-                this.TokenType = token.token_type;
+                var content = await response.Content.ReadAsStringAsync();
+
+                this.AuthorizeToken = JsonSerializer.Deserialize<AuthorizeToken>(content);
             }
             else
             {
@@ -163,158 +124,56 @@ namespace MercadoLibre.AspNetCore.SDK
             }
         }
 
-
-        public void refreshToken(string refresh_token)
+        public async Task<HttpResponseMessage> GetAsync(string resource, Dictionary<string, object> props = null)
         {
-            var request = new RestRequest("/oauth/token?grant_type=refresh_token&client_id={client_id}&client_secret={client_secret}&refresh_token={refresh_token}", Method.POST);
-            request.AddParameter("client_id", this.ClientId, ParameterType.UrlSegment);
-            request.AddParameter("client_secret", this.ClientSecret, ParameterType.UrlSegment);
-            request.AddParameter("refresh_token", refresh_token, ParameterType.UrlSegment);
+            var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            request.AddHeader("Accept", "application/json");
-
-            var response = ExecuteRequest(request);
-
-            if (response.StatusCode.Equals(HttpStatusCode.OK))
-            {
-                var token = JsonConvert.DeserializeAnonymousType(response.Content, new
-                {
-                    refresh_token = "",
-                    access_token = "",
-                    expires_in = 0,
-                    user_id = "",
-                    scope = "",
-                    token_type = ""
-                });
-                this.AccessToken = token.access_token;
-                this.RefreshToken = token.refresh_token;
-                this.ExperiIn = Convert.ToInt64(token.expires_in);
-                this.Scope = token.scope;
-                this.UserId = token.user_id;
-                this.TokenType = token.token_type;
-            }
-            else
-            {
-                throw new AuthorizationException();
-            }
+            return await _Client.GetAsync(url);
         }
 
-        public IRestResponse Get(string resource, List<Parameter> param)
+        public async Task<HttpResponseMessage> PostAsync(string resource, Dictionary<string, object> props = null, HttpContent body = null)
         {
-            bool containsAT = false;
+            var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            var request = new RestRequest(resource, Method.GET);
-            List<string> names = new List<string>();
-            foreach (Parameter p in param)
-            {
-                names.Add(p.Name + "={" + p.Name + "}");
-                if (p.Name.Equals("access_token"))
-                {
-                    containsAT = true;
-                }
-                p.Type = ParameterType.UrlSegment;
-                request.AddParameter(p);
-            }
-
-            request.Resource = resource + "?" + String.Join("&", names.ToArray());
-
-            request.AddHeader("Accept", "application/json");
-
-            var response = ExecuteRequest(request);
-
-
-            return response;
+            return await _Client.PostAsync(url, body);
         }
 
-        public IRestResponse Post(string resource, List<Parameter> param, object body)
+        public async Task<HttpResponseMessage> PutAsync(string resource, Dictionary<string, object> props = null, HttpContent body = null)
         {
-            bool containsAT = false;
+            var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            var request = new RestRequest(resource, Method.POST);
-            List<string> names = new List<string>();
-            foreach (Parameter p in param)
-            {
-                names.Add(p.Name + "={" + p.Name + "}");
-                if (p.Name.Equals("access_token"))
-                {
-                    containsAT = true;
-                }
-                p.Type = ParameterType.UrlSegment;
-                request.AddParameter(p);
-            }
-
-            request.Resource = resource + "?" + String.Join("&", names.ToArray());
-
-            request.AddHeader("Accept", "application/json");
-            request.AddHeader("Content-Type", "application/json");
-            request.RequestFormat = DataFormat.Json;
-
-            request.AddBody(body);
-
-            var response = ExecuteRequest(request);
-
-
-
-            return response;
+            return await _Client.PutAsync(url, body);
         }
 
-        public IRestResponse Put(string resource, List<Parameter> param, object body)
+        public async Task<HttpResponseMessage> DeleteAsync(string resource, Dictionary<string, object> props = null)
         {
-            bool containsAT = false;
+            var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            var request = new RestRequest(resource, Method.PUT);
-            List<string> names = new List<string>();
-            foreach (Parameter p in param)
-            {
-                names.Add(p.Name + "={" + p.Name + "}");
-                if (p.Name.Equals("access_token"))
-                {
-                    containsAT = true;
-                }
-                p.Type = ParameterType.UrlSegment;
-                request.AddParameter(p);
-            }
-
-            request.Resource = resource + "?" + String.Join("&", names.ToArray());
-
-            request.AddHeader("Accept", "application/json");
-            request.AddHeader("Content-Type", "application/json");
-            request.RequestFormat = DataFormat.Json;
-
-            request.AddBody(body);
-
-            var response = ExecuteRequest(request);
-
-
-
-            return response;
+            return await _Client.DeleteAsync(url);
         }
 
-        public IRestResponse Delete(string resource, List<Parameter> param)
-        {
-            bool containsAT = false;
+        #region Private methods
 
-            var request = new RestRequest(resource, Method.DELETE);
-            List<string> names = new List<string>();
-            foreach (Parameter p in param)
+        private string ParamsToGetUrl(Dictionary<string, object> props, bool includeAccessToken = true)
+        {
+            if (props == null)
+                props = new Dictionary<string, object>();
+
+            if (includeAccessToken && !props.ContainsKey(AccessTokenKeyName))
             {
-                names.Add(p.Name + "={" + p.Name + "}");
-                if (p.Name.Equals("access_token"))
-                {
-                    containsAT = true;
-                }
-                p.Type = ParameterType.UrlSegment;
-                request.AddParameter(p);
+                props[AccessTokenKeyName] = AuthorizeToken.AccessToken;
             }
 
-            request.Resource = resource + "?" + String.Join("&", names.ToArray());
+            var values = new List<string>();
 
-            request.AddHeader("Accept", "application/json");
+            foreach (var p in props)
+            {
+                values.Add($"{p.Key}={{{p.Value}}}");
+            }
 
-            var response = ExecuteRequest(request);
-
-
-            return response;
+            return string.Join("&", values);
         }
+
+        #endregion
     }
 }
