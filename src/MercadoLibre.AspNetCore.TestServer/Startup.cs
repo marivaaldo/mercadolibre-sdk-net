@@ -27,7 +27,7 @@ namespace MercadoLibre.AspNetCore.TestServer
             services.AddControllersWithViews();
 
             services.AddMercadoLibre(
-                Configuration.GetValue<int>("MLClientId"), 
+                Configuration.GetValue<long>("MLClientId"),
                 Configuration.GetValue<string>("MLClientSecret"));
         }
 

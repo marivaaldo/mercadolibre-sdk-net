@@ -12,7 +12,7 @@ namespace MercadoLibre.AspNetCore.TestServer.Controllers
     [Route("ml")]
     public class MercadoLibreController : Controller
     {
-        private Dictionary<string, SDK.Models.AuthorizeToken> _Tokens = new Dictionary<string, SDK.Models.AuthorizeToken>();
+        private static readonly Dictionary<long, SDK.Models.AuthorizeToken> _Tokens = new Dictionary<long, SDK.Models.AuthorizeToken>();
 
         private Meli Meli { get; }
 
@@ -27,7 +27,7 @@ namespace MercadoLibre.AspNetCore.TestServer.Controllers
             return Redirect(Meli.GetAuthUrl(AuthUrls.MLB, "https://localhost:5001/ml/auth"));
         }
 
-        [HttpGet]
+        [HttpGet("auth")]
         public async Task<IActionResult> Auth(string code)
         {
             try
@@ -44,7 +44,7 @@ namespace MercadoLibre.AspNetCore.TestServer.Controllers
             }
         }
 
-        [HttpGet()]
+        [HttpGet("notifications")]
         public IActionResult Notifications()
         {
             return Ok();

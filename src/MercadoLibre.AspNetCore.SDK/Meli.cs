@@ -48,7 +48,7 @@ namespace MercadoLibre.AspNetCore.SDK
 
             _Client.DefaultRequestHeaders.Add("User-Agent", SdkVersion);
             _Client.DefaultRequestHeaders.Add("Accept", "application/json");
-            _Client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+            //_Client.DefaultRequestHeaders.Add("Content-Type", "application/json");
         }
 
         public Meli(long clientId, string clientSecret)
