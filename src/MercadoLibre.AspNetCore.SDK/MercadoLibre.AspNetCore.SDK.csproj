@@ -2,10 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>MercadoLibre.AspNetCore.SDK</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Marivaldo Júnior</Authors>
+    <Owners>Marivaldo Júnior</Owners>
+    <Company>Marivaldo Júnior | medium.com/@marivaaldo</Company>
+    <ProjectUrl>https://github.com/marivaaldo/mercadolibre-netcore-sdk</ProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.1" />
   </ItemGroup>
 
 </Project>
