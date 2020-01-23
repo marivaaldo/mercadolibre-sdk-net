@@ -12,3 +12,12 @@ LastName: @Model.LastName
 <br />
 Email: @Model.Email
 <br />
+<br />
+---------------------------------------------------------------
+<br />
+<br />
+
+@System.Text.Json.JsonSerializer.Serialize(Model, new System.Text.Json.JsonSerializerOptions()
+{
+    WriteIndented = true
+})

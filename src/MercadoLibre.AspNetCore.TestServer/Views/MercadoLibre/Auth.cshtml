@@ -20,4 +20,5 @@ TokenType: @Model.TokenType
 <form asp-controller="MercadoLibre" asp-action="Refresh" method="post">
     <input type="hidden" asp-for="RefreshToken" value="@Model.RefreshToken" />
     <button>Refresh Token</button>
+    <a asp-controller="MercadoLibre" asp-action="UserInfo">User Info</a>
 </form>
