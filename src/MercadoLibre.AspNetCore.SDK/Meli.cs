@@ -51,6 +51,12 @@ namespace MercadoLibre.AspNetCore.SDK
             //_Client.DefaultRequestHeaders.Add("Content-Type", "application/json");
         }
 
+        public Meli(MeliConfiguration configuration)
+        {
+            this.ClientId = configuration.ClientId;
+            this.ClientSecret = configuration.ClientSecret;
+        }
+
         public Meli(long clientId, string clientSecret)
             : this()
         {
@@ -131,11 +137,29 @@ namespace MercadoLibre.AspNetCore.SDK
             return await _Client.GetAsync(url);
         }
 
+        public async Task<T> GetAsync<T>(string resource, Dictionary<string, object> props = null)
+        {
+            var response = await GetAsync(resource, props);
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<T>(content);
+        }
+
         public async Task<HttpResponseMessage> PostAsync(string resource, Dictionary<string, object> props = null, HttpContent body = null)
         {
             var url = $"{resource}?{ParamsToGetUrl(props)}";
 
             return await _Client.PostAsync(url, body);
+        }
+
+        public async Task<T> PostAsync<T>(string resource, Dictionary<string, object> props = null, HttpContent body = null)
+        {
+            var response = await PostAsync(resource, props, body);
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<T>(content);
         }
 
         public async Task<HttpResponseMessage> PutAsync(string resource, Dictionary<string, object> props = null, HttpContent body = null)
@@ -145,11 +169,29 @@ namespace MercadoLibre.AspNetCore.SDK
             return await _Client.PutAsync(url, body);
         }
 
+        public async Task<T> PutAsync<T>(string resource, Dictionary<string, object> props = null, HttpContent body = null)
+        {
+            var response = await PutAsync(resource, props, body);
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<T>(content);
+        }
+
         public async Task<HttpResponseMessage> DeleteAsync(string resource, Dictionary<string, object> props = null)
         {
             var url = $"{resource}?{ParamsToGetUrl(props)}";
 
             return await _Client.DeleteAsync(url);
+        }
+
+        public async Task<T> DeleteAsync<T>(string resource, Dictionary<string, object> props = null)
+        {
+            var response = await DeleteAsync(resource, props);
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<T>(content);
         }
 
         #region Private methods
@@ -168,7 +210,14 @@ namespace MercadoLibre.AspNetCore.SDK
 
             foreach (var p in props)
             {
-                values.Add($"{p.Key}={{{p.Value}}}");
+                if (p.Key == AccessTokenKeyName)
+                {
+                    values.Add($"{p.Key}={p.Value}");
+                }
+                else
+                {
+                    values.Add($"{p.Key}={{{p.Value}}}");
+                }
             }
 
             return string.Join("&", values);

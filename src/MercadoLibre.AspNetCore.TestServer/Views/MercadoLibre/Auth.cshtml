@@ -16,3 +16,8 @@ Scope: @Model.Scope
 <br />
 TokenType: @Model.TokenType
 <br />
+
+<form asp-controller="MercadoLibre" asp-action="Refresh" method="post">
+    <input type="hidden" asp-for="RefreshToken" value="@Model.RefreshToken" />
+    <button>Refresh Token</button>
+</form>
