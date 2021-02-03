@@ -8,7 +8,9 @@ This minimal example.
 ```csharp
 ...
 
+var meli = new Meli(<clientId>, "<clientSecret>");
 
+var authUrl = meli.GetAuthUrl(AuthUrls.MLB, "https://localhost:5000/ml")
 
 ...
 ```
