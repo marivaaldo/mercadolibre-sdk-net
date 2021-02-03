@@ -1,0 +1,29 @@
+name: Mercado Libre SDK .NET - Release
+
+on:
+  workflow_run:
+    workflows: ["Mercado Libre SDK .NET - CI"]
+    branches: [ main ]
+    types:
+      - completed
+
+jobs:
+  publish-nuget:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0.102'
+    - name: Install dependencies
+      run: cd src && dotnet restore MercadoLibre.AspNetCore.SDK.sln && cd ..
+    - name: Build
+      run: cd src && dotnet build MercadoLibre.AspNetCore.SDK.sln --configuration Release --no-restore && cd ..
+    - name: Publish to NuGet
+      uses: brandedoutcast/publish-nuget@v2
+      with:
+        PROJECT_FILE_PATH: src/MercadoLibre.AspNetCore.SDK/MercadoLibre.AspNetCore.SDK.csproj
+        VERSION_REGEX: '^\s*<Version>(.*)<\/Version>\s*$'
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+        TAG_FORMAT: v*

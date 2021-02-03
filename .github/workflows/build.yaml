@@ -1,0 +1,23 @@
+name: Mercado Libre SDK .NET - CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0.102'
+    - name: Install dependencies
+      run: cd src && dotnet restore MercadoLibre.AspNetCore.SDK.sln && cd ..
+    - name: Build
+      run: cd src && dotnet build MercadoLibre.AspNetCore.SDK.sln --configuration Release --no-restore && cd ..
+    # - name: Test
+    #   run: dotnet run --project project-name

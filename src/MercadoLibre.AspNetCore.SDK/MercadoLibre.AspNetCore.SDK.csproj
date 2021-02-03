@@ -1,11 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
+    <Authors>Marivaldo Júnior</Authors>
+    <Version>1.1.0</Version>
+    <Description>MercadoLibre's .NET 5 wrapper</Description>
+    <PackageProjectUrl>https://github.com/marivaaldo/mercadolibre-sdk-net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/marivaaldo/mercadolibre-sdk-net</RepositoryUrl>
+    <PackageTags>C# MercadoLivre MercadoLibre Mercado Libre Livre</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
+    <Compile Remove="Extensions\**" />
+    <EmbeddedResource Remove="Extensions\**" />
+    <None Remove="Extensions\**" />
   </ItemGroup>
 
 </Project>

@@ -15,7 +15,7 @@ namespace MercadoLibre.AspNetCore.SDK
     {
         #region Static variables
 
-        private static readonly string SdkVersion = "MELI-NETCORE-SDK-1.0.0";
+        private static readonly string SdkVersion = "MELI-NETCORE-SDK-1.1.0";
 
         public static string ApiUrl { get; set; } = "https://api.mercadolibre.com";
 
