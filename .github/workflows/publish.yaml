@@ -3,7 +3,7 @@ name: Mercado Libre SDK .NET - Release
 on:
   workflow_run:
     workflows: ["Mercado Libre SDK .NET - CI"]
-    branches: [ main ]
+    branches: [ master ]
     types:
       - completed
 
