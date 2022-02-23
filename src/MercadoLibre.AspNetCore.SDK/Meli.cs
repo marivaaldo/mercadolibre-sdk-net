@@ -27,9 +27,9 @@ namespace MercadoLibre.AspNetCore.SDK
 
         #endregion
 
-        public string ClientSecret;
-        public long ClientId;
-        public AuthorizeToken AuthorizeToken;
+        private readonly string _clientSecret;
+        private readonly long _clientId;
+        public AuthorizeToken AuthorizeToken { get; private set; }
 
         #region Constructors
 
@@ -56,8 +56,8 @@ namespace MercadoLibre.AspNetCore.SDK
         public Meli(long clientId, string clientSecret, string accessToken = null, string refreshToken = null)
             : this()
         {
-            this.ClientId = clientId;
-            this.ClientSecret = clientSecret;
+            _clientId = clientId;
+            _clientSecret = clientSecret;
             this.AuthorizeToken.AccessToken = accessToken;
             this.AuthorizeToken.RefreshToken = refreshToken;
         }
@@ -66,12 +66,12 @@ namespace MercadoLibre.AspNetCore.SDK
 
         public string GetAuthUrl(string authUrl, string redirectUri)
         {
-            return $"{authUrl}/authorization?response_type=code&client_id={ClientId}&redirect_uri={HttpUtility.UrlEncode(redirectUri)}";
+            return $"{authUrl}/authorization?response_type=code&client_id={_clientId}&redirect_uri={HttpUtility.UrlEncode(redirectUri)}";
         }
 
         public async Task AuthorizeAsync(string code, string redirectUri)
         {
-            var url = $"/oauth/token?grant_type=authorization_code&client_id={ClientId}&client_secret={ClientSecret}&code={code}&redirect_uri={redirectUri}";
+            var url = $"/oauth/token?grant_type=authorization_code&client_id={_clientId}&client_secret={_clientSecret}&code={code}&redirect_uri={redirectUri}";
 
             var response = await _client.PostAsync(url, null);
 
@@ -95,7 +95,7 @@ namespace MercadoLibre.AspNetCore.SDK
 
         public async Task RefreshTokenAsync(string refreshToken)
         {
-            var url = $"/oauth/token?grant_type=refresh_token&client_id={ClientId}&client_secret={ClientSecret}&refresh_token={refreshToken}";
+            var url = $"/oauth/token?grant_type=refresh_token&client_id={_clientId}&client_secret={_clientSecret}&refresh_token={refreshToken}";
 
             var response = await _client.PostAsync(url, null);
 
