@@ -16,61 +16,48 @@ namespace MercadoLibre.AspNetCore.SDK
         #region Static variables
 
         private static readonly string SdkVersion = "MELI-NETCORE-SDK-1.1.0";
-
-        public static string ApiUrl { get; set; } = "https://api.mercadolibre.com";
-
+        public const string ApiUrl = "https://api.mercadolibre.com";
         public const string AccessTokenKeyName = "access_token";
 
         #endregion
 
         #region Private fields
 
-        private readonly HttpClient _Client;
+        private readonly HttpClient _client;
 
         #endregion
 
-        public string ClientSecret { get; private set; }
-
-        public long ClientId { get; private set; }
-
-        public AuthorizeToken AuthorizeToken { get; set; } = new AuthorizeToken();
+        private readonly string _clientSecret;
+        private readonly long _clientId;
+        public AuthorizeToken AuthorizeToken { get; private set; }
 
         #region Constructors
 
-        public Meli()
+        private Meli()
         {
-            _Client = new HttpClient
+            if (_client is null)
             {
-                BaseAddress = new Uri(ApiUrl),
-            };
+                _client = new HttpClient
+                {
+                    BaseAddress = new Uri(ApiUrl),
+                };
 
-            _Client.DefaultRequestHeaders.Clear();
+                _client.DefaultRequestHeaders.Clear();
 
-            _Client.DefaultRequestHeaders.Add("User-Agent", SdkVersion);
-            _Client.DefaultRequestHeaders.Add("Accept", "application/json");
-            _Client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+                _client.DefaultRequestHeaders.Add("User-Agent", SdkVersion);
+                _client.DefaultRequestHeaders.Add("Accept", "application/json");
+                _client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+            }
+
+            if (AuthorizeToken is null)
+                this.AuthorizeToken = new AuthorizeToken();
         }
 
-        public Meli(long clientId, string clientSecret)
+        public Meli(long clientId, string clientSecret, string accessToken = null, string refreshToken = null)
             : this()
         {
-            this.ClientId = clientId;
-            this.ClientSecret = clientSecret;
-        }
-
-        public Meli(long clientId, string clientSecret, string accessToken)
-            : this()
-        {
-            this.ClientId = clientId;
-            this.ClientSecret = clientSecret;
-            this.AuthorizeToken.AccessToken = accessToken;
-        }
-
-        public Meli(long clientId, string clientSecret, string accessToken, string refreshToken)
-            : this()
-        {
-            this.ClientId = clientId;
-            this.ClientSecret = clientSecret;
+            _clientId = clientId;
+            _clientSecret = clientSecret;
             this.AuthorizeToken.AccessToken = accessToken;
             this.AuthorizeToken.RefreshToken = refreshToken;
         }
@@ -79,14 +66,14 @@ namespace MercadoLibre.AspNetCore.SDK
 
         public string GetAuthUrl(string authUrl, string redirectUri)
         {
-            return $"{authUrl}/authorization?response_type=code&client_id={ClientId}&redirect_uri={HttpUtility.UrlEncode(redirectUri)}";
+            return $"{authUrl}/authorization?response_type=code&client_id={_clientId}&redirect_uri={HttpUtility.UrlEncode(redirectUri)}";
         }
 
         public async Task AuthorizeAsync(string code, string redirectUri)
         {
-            var url = $"/oauth/token?grant_type=authorization_code&client_id={ClientId}&client_secret={ClientSecret}&code={code}&redirect_uri={redirectUri}";
+            var url = $"/oauth/token?grant_type=authorization_code&client_id={_clientId}&client_secret={_clientSecret}&code={code}&redirect_uri={redirectUri}";
 
-            var response = await _Client.PostAsync(url, null);
+            var response = await _client.PostAsync(url, null);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -108,9 +95,9 @@ namespace MercadoLibre.AspNetCore.SDK
 
         public async Task RefreshTokenAsync(string refreshToken)
         {
-            var url = $"/oauth/token?grant_type=refresh_token&client_id={ClientId}&client_secret={ClientSecret}&refresh_token={refreshToken}";
+            var url = $"/oauth/token?grant_type=refresh_token&client_id={_clientId}&client_secret={_clientSecret}&refresh_token={refreshToken}";
 
-            var response = await _Client.PostAsync(url, null);
+            var response = await _client.PostAsync(url, null);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -128,28 +115,28 @@ namespace MercadoLibre.AspNetCore.SDK
         {
             var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            return await _Client.GetAsync(url);
+            return await _client.GetAsync(url);
         }
 
         public async Task<HttpResponseMessage> PostAsync(string resource, Dictionary<string, object> props = null, HttpContent body = null)
         {
             var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            return await _Client.PostAsync(url, body);
+            return await _client.PostAsync(url, body);
         }
 
         public async Task<HttpResponseMessage> PutAsync(string resource, Dictionary<string, object> props = null, HttpContent body = null)
         {
             var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            return await _Client.PutAsync(url, body);
+            return await _client.PutAsync(url, body);
         }
 
         public async Task<HttpResponseMessage> DeleteAsync(string resource, Dictionary<string, object> props = null)
         {
             var url = $"{resource}?{ParamsToGetUrl(props)}";
 
-            return await _Client.DeleteAsync(url);
+            return await _client.DeleteAsync(url);
         }
 
         #region Private methods
