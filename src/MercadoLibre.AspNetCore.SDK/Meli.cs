@@ -33,7 +33,7 @@ namespace MercadoLibre.AspNetCore.SDK
 
         #region Constructors
 
-        public Meli()
+        private Meli()
         {
             if (_client is null)
             {
